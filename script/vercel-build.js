@@ -64,25 +64,35 @@ async function buildAll() {
   console.log("Creating Vercel output structure...");
   
   // Create .vercel/output directory structure
-  await mkdir(".vercel/output/functions/index.func", { recursive: true });
+  await mkdir(".vercel/output/functions/api.func", { recursive: true });
   await mkdir(".vercel/output/static", { recursive: true });
 
   // Copy static files
   await cp("dist/public", ".vercel/output/static", { recursive: true });
 
   // Copy server function
-  await cp("dist/index.cjs", ".vercel/output/functions/index.func/index.js");
+  await cp("dist/index.cjs", ".vercel/output/functions/api.func/index.js");
+
+  // Create package.json for the function (needed for dependencies)
+  const functionPackage = {
+    type: "commonjs"
+  };
+  
+  await writeFile(
+    ".vercel/output/functions/api.func/package.json",
+    JSON.stringify(functionPackage, null, 2)
+  );
 
   // Create function config
   const functionConfig = {
     runtime: "nodejs20.x",
     handler: "index.js",
     launcherType: "Nodejs",
-    shouldAddHelpers: false
+    supportsResponseStreaming: true
   };
   
   await writeFile(
-    ".vercel/output/functions/index.func/.vc-config.json",
+    ".vercel/output/functions/api.func/.vc-config.json",
     JSON.stringify(functionConfig, null, 2)
   );
 
@@ -92,7 +102,7 @@ async function buildAll() {
     routes: [
       {
         src: "^/api/(.*)$",
-        dest: "/index"
+        dest: "/api"
       },
       {
         handle: "filesystem"

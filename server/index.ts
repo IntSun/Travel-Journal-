@@ -90,7 +90,7 @@ app.use((req, res, next) => {
   }
 
   // Only start server if not in Vercel (Vercel will handle the serverless function)
-  if (!process.env.VERCEL) {
+  if (!process.env.VERCEL && !process.env.VERCEL_ENV) {
     // Use PORT environment variable if specified, otherwise use 0 to get any available port
     const requestedPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 0;
     const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "localhost";
@@ -105,5 +105,7 @@ app.use((req, res, next) => {
   }
 })();
 
-// Export the app for Vercel serverless functions
-export default app;
+// Export the Express app for Vercel serverless functions
+// Vercel expects either the app directly or a handler function
+module.exports = app;
+module.exports.default = app;
