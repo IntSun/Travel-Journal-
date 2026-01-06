@@ -89,15 +89,21 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  // Use PORT environment variable if specified, otherwise use 0 to get any available port
-  const requestedPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 0;
-  const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "localhost";
-  httpServer.listen(
-    requestedPort,
-    host,
-    () => {
-      const actualPort = (httpServer.address() as { port: number })?.port || requestedPort;
-      log(`serving on port ${actualPort} (${host})`);
-    },
-  );
+  // Only start server if not in Vercel (Vercel will handle the serverless function)
+  if (!process.env.VERCEL) {
+    // Use PORT environment variable if specified, otherwise use 0 to get any available port
+    const requestedPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 0;
+    const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "localhost";
+    httpServer.listen(
+      requestedPort,
+      host,
+      () => {
+        const actualPort = (httpServer.address() as { port: number })?.port || requestedPort;
+        log(`serving on port ${actualPort} (${host})`);
+      },
+    );
+  }
 })();
+
+// Export the app for Vercel serverless functions
+export default app;

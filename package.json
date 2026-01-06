@@ -9,7 +9,7 @@
     "build": "node script/build.js",
     "build:ts": "tsx script/build.ts",
     "start": "cross-env NODE_ENV=production node dist/index.cjs",
-    "vercel-build": "npm run build",
+    "vercel-build": "node script/vercel-build.js",
     "check": "tsc",
     "test:db": "node test-mongodb.js",
     "setup": "node test-setup.js",
