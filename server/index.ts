@@ -2,10 +2,13 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-import dotenv from "dotenv";
 
-// Load environment variables from .env file
-dotenv.config();
+// Load environment variables from .env file only in development
+// In production (Vercel), environment variables are provided by the platform
+if (process.env.NODE_ENV !== "production") {
+  const dotenv = await import("dotenv");
+  dotenv.config();
+}
 
 const app = express();
 const httpServer = createServer(app);
