@@ -226,5 +226,15 @@ export async function registerRoutes(
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Debug endpoint to check environment
+  app.get("/api/debug/env", (_req: Request, res: Response) => {
+    res.json({
+      hasMongoUri: !!process.env.MONGODB_URI,
+      mongoUriPrefix: process.env.MONGODB_URI?.substring(0, 20) || "not set",
+      nodeEnv: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV,
+    });
+  });
+
   return httpServer;
 }
