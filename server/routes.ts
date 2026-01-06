@@ -106,6 +106,17 @@ export async function registerRoutes(
   // JOURNAL ENTRY ROUTES
   // ============================================
 
+  // Get all entries (public, for landing page)
+  app.get("/api/entries", async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+      const entries = await storage.getAllEntries(limit);
+      res.json(entries);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Get all entries for a user
   app.get("/api/entries/user/:userId", async (req: Request, res: Response) => {
     try {

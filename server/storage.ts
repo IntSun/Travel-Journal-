@@ -14,6 +14,7 @@ export interface IStorage {
   // Entry methods
   getEntry(id: string): Promise<Entry | null>;
   getEntriesByUserId(userId: string): Promise<Entry[]>;
+  getAllEntries(limit?: number): Promise<Entry[]>;
   searchEntries(userId: string, query: string): Promise<Entry[]>;
   createEntry(entry: InsertEntry): Promise<Entry>;
   updateEntry(id: string, userId: string, updates: Partial<InsertEntry>): Promise<Entry | null>;
@@ -108,6 +109,15 @@ export class MongoStorage implements IStorage {
       ]
     })
       .sort({ createdAt: -1 })
+      .select("-__v");
+    return entries.map(entry => this.toPlainObject<Entry>(entry)!);
+  }
+
+  async getAllEntries(limit: number = 50): Promise<Entry[]> {
+    await this.ensureConnection();
+    const entries = await EntryModel.find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
       .select("-__v");
     return entries.map(entry => this.toPlainObject<Entry>(entry)!);
   }

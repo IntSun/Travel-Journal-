@@ -139,7 +139,7 @@ export default function AuthPage() {
 
         {/* Colorful Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent mix-blend-overlay opacity-80"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-orange-500/20 mix-blend-multiply backdrop-blur-[1px]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-orange-500/10 mix-blend-multiply backdrop-blur-[1px]"></div>
       </div>
 
       {/* Left Side Content - Text (Hidden on small screens, visible on large) */}

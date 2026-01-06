@@ -9,7 +9,6 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Entry } from "@shared/schema";
-import { mockEntries } from "@/lib/mock-data";
 import emptyStateImg from '@assets/generated_images/minimalist_line_art_illustration_of_a_traveler_with_a_backpack_looking_at_a_map,_empty_state_concept.png';
 import communityImg from '@assets/generated_images/travelers_sharing_stories_illustration.png';
 
@@ -38,43 +37,54 @@ export default function Home() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // If user is logged in, fetch their entries
-    if (user) {
-      const fetchEntries = async () => {
-        try {
-          setIsLoading(true);
-          const response = await fetch(`/api/entries/user/${user.id}`);
+    const fetchEntries = async () => {
+      try {
+        setIsLoading(true);
+        
+        if (user) {
+          // If user is logged in, fetch ALL entries (user's + community)
+          const response = await fetch(`/api/entries?limit=50`);
           if (!response.ok) {
+            console.error('Failed to fetch entries:', response.status);
             throw new Error('Failed to fetch entries');
           }
           const data = await response.json();
-          setEntries(data);
+          console.log('Fetched all entries (logged in):', data.length, data);
           
-          // If user has no entries, fetch community entries for inspiration
-          if (data.length === 0) {
-            // Fetch entries from other users (e.g., janedoe for inspiration)
-            const communityResponse = await fetch(`/api/entries/user/695c4d76c9db306750033d75`); // janedoe's ID
-            if (communityResponse.ok) {
-              const communityData = await communityResponse.json();
-              setCommunityEntries(communityData);
-            }
+          // Separate user's entries from community entries
+          const userEntries = data.filter((entry: any) => entry.userId === user.id);
+          const otherEntries = data.filter((entry: any) => entry.userId !== user.id);
+          
+          console.log('User entries:', userEntries.length, 'Community entries:', otherEntries.length);
+          setEntries(userEntries);
+          setCommunityEntries(otherEntries);
+        } else {
+          // Not logged in - fetch all entries from database to show on landing page
+          const communityResponse = await fetch(`/api/entries?limit=50`);
+          if (communityResponse.ok) {
+            const communityData = await communityResponse.json();
+            console.log('Fetched entries:', communityData.length, communityData);
+            setCommunityEntries(communityData || []);
+          } else {
+            const errorData = await communityResponse.json().catch(() => ({}));
+            console.error('Failed to fetch entries:', communityResponse.status, errorData);
           }
-        } catch (error) {
-          console.error('Error fetching entries:', error);
-        } finally {
-          setIsLoading(false);
         }
-      };
+      } catch (error) {
+        console.error('Error fetching entries:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      fetchEntries();
-    } else {
-      // Not logged in - show landing page without entries
-      setIsLoading(false);
-    }
+    fetchEntries();
   }, [user]);
 
-  // Show user's entries if they have any, otherwise show community entries for inspiration
-  const displayEntries = entries.length > 0 ? entries : communityEntries;
+  // Show all entries: user's entries first, then community entries
+  // When logged out, show all community entries
+  const displayEntries = user 
+    ? [...entries, ...communityEntries]
+    : communityEntries;
   
   const filteredEntries = displayEntries.filter((entry) =>
     entry.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -206,13 +216,13 @@ export default function Home() {
                <div className="flex items-center justify-between mb-8">
                  <div>
                    <h2 className="font-serif text-3xl font-bold text-foreground">
-                     {entries.length > 0 ? 'My Journals' : 'Community Inspiration'}
+                     {entries.length > 0 ? 'Travel Stories' : 'Community Inspiration'}
                    </h2>
-                   {entries.length === 0 && communityEntries.length > 0 && (
-                     <p className="text-sm text-muted-foreground mt-1">
-                       Get inspired by other travelers while you create your first entry
-                     </p>
-                   )}
+                   <p className="text-sm text-muted-foreground mt-1">
+                     {entries.length > 0 
+                       ? `${entries.length} ${entries.length === 1 ? 'story' : 'stories'} from you, ${communityEntries.length} from the community`
+                       : 'Get inspired by other travelers while you create your first entry'}
+                   </p>
                  </div>
                  <div className="hidden md:flex gap-2">
                      <Button variant="ghost" size="sm" className="text-primary font-medium bg-primary/5 hover:bg-primary/10">All</Button>
@@ -313,7 +323,7 @@ export default function Home() {
               )}
             </>
           ) : (
-            /* Landing page for non-logged-in users - Show sample journals */
+            /* Landing page for non-logged-in users - Show real entries from database */
             <>
               <div className="flex items-center justify-between mb-8">
                 <div>
@@ -329,53 +339,92 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Show sample/mock entries for non-logged-in users */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {mockEntries.map((entry, index) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{ delay: index * 0.1, duration: 0.6, ease: "easeOut" }}
-                    className={index === 0 ? "md:col-span-2 lg:col-span-2 row-span-2" : ""}
-                  >
-                    <div className="block h-full group perspective-1000 cursor-default">
-                      <Card className={`h-full overflow-hidden border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-card group-hover:-translate-y-2 group-hover:bg-white dark:group-hover:bg-zinc-900 ${index === 0 ? "flex flex-col md:flex-row" : "flex flex-col"}`}>
-                        <div className={`relative overflow-hidden ${index === 0 ? "md:w-2/3 h-64 md:h-auto" : "h-72"}`}>
-                          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10 duration-500" />
-                          <img
-                            src={entry.images[0]}
-                            alt={entry.title}
-                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                          />
-                          <Badge className="absolute top-4 right-4 z-20 bg-white/90 text-foreground hover:bg-white backdrop-blur-md shadow-sm font-medium px-3 py-1">
-                            <Calendar className="w-3.5 h-3.5 mr-2 text-primary" />
-                            {new Date(entry.date).toLocaleDateString()}
-                          </Badge>
-                        </div>
-                        
-                        <div className={`relative flex flex-col ${index === 0 ? "md:w-1/3 p-8 justify-center" : "p-6"}`}>
-                          <CardHeader className="p-0 mb-4">
-                            <div className="flex items-center text-primary text-sm font-bold tracking-wider uppercase mb-3">
-                              <MapPin className="w-3.5 h-3.5 mr-1.5" />
-                              {entry.location}
-                            </div>
-                            <h3 className={`font-serif font-bold text-foreground group-hover:text-primary transition-colors leading-tight ${index === 0 ? "text-4xl" : "text-2xl"}`}>
-                              {entry.title}
-                            </h3>
-                          </CardHeader>
-                          <CardContent className="p-0 mb-6 flex-grow">
-                            <p className="text-muted-foreground line-clamp-3 leading-relaxed text-base font-light">
-                              {entry.description}
-                            </p>
-                          </CardContent>
-                        </div>
-                      </Card>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-24">
+                  <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                </div>
+              ) : (
+                <>
+                  {/* Show real entries from database for non-logged-in users */}
+                  {communityEntries.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {filteredEntries.map((entry, index) => (
+                        <motion.div
+                          key={entry.id}
+                          initial={{ opacity: 0, y: 40 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: "-50px" }}
+                          transition={{ delay: index * 0.1, duration: 0.6, ease: "easeOut" }}
+                          className={index === 0 ? "md:col-span-2 lg:col-span-2 row-span-2" : ""}
+                        >
+                          <Link href={`/entry/${entry.id}`}>
+                            <a className="block h-full group perspective-1000">
+                              <Card className={`h-full overflow-hidden border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-card group-hover:-translate-y-2 group-hover:bg-white dark:group-hover:bg-zinc-900 ${index === 0 ? "flex flex-col md:flex-row" : "flex flex-col"}`}>
+                                <div className={`relative overflow-hidden ${index === 0 ? "md:w-2/3 h-64 md:h-auto" : "h-72"}`}>
+                                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10 duration-500" />
+                                  <img
+                                    src={entry.images[0]}
+                                    alt={entry.title}
+                                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                                  />
+                                  <Badge className="absolute top-4 right-4 z-20 bg-white/90 text-foreground hover:bg-white backdrop-blur-md shadow-sm font-medium px-3 py-1">
+                                    <Calendar className="w-3.5 h-3.5 mr-2 text-primary" />
+                                    {new Date(entry.date).toLocaleDateString()}
+                                  </Badge>
+                                </div>
+                                
+                                <div className={`relative flex flex-col ${index === 0 ? "md:w-1/3 p-8 justify-center" : "p-6"}`}>
+                                  <CardHeader className="p-0 mb-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                      <div className="flex items-center text-primary text-sm font-bold tracking-wider uppercase">
+                                        <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                                        {entry.location}
+                                      </div>
+                                      <span className="text-xs text-muted-foreground italic">by janedoe</span>
+                                    </div>
+                                    <h3 className={`font-serif font-bold text-foreground group-hover:text-primary transition-colors leading-tight ${index === 0 ? "text-4xl" : "text-2xl"}`}>
+                                      {entry.title}
+                                    </h3>
+                                  </CardHeader>
+                                  <CardContent className="p-0 mb-6 flex-grow">
+                                    <p className="text-muted-foreground line-clamp-3 leading-relaxed text-base font-light">
+                                      {entry.description}
+                                    </p>
+                                  </CardContent>
+                                  <CardFooter className="p-0 mt-auto">
+                                    <div className="flex items-center text-sm font-bold text-primary group-hover:translate-x-2 transition-transform duration-300">
+                                      Read Story <ArrowRight className="w-4 h-4 ml-2" />
+                                    </div>
+                                  </CardFooter>
+                                </div>
+                              </Card>
+                            </a>
+                          </Link>
+                        </motion.div>
+                      ))}
                     </div>
-                  </motion.div>
-                ))}
-              </div>
+                  ) : (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center justify-center py-24 bg-muted/20 rounded-3xl border border-dashed border-muted-foreground/10"
+                    >
+                      <div className="w-64 h-64 mb-6 opacity-80 mix-blend-multiply dark:mix-blend-normal">
+                        <img src={emptyStateImg} alt="No entries" className="w-full h-full object-contain" />
+                      </div>
+                      <h3 className="text-2xl font-serif font-bold text-foreground mb-2">
+                        No Stories Yet
+                      </h3>
+                      <p className="text-muted-foreground max-w-md text-center mb-6">
+                        Be the first to share your travel adventures with the world!
+                      </p>
+                      <Link href="/auth">
+                        <Button size="lg">Create Account</Button>
+                      </Link>
+                    </motion.div>
+                  )}
+                </>
+              )}
 
               {/* Call to action after sample entries */}
               <motion.div 

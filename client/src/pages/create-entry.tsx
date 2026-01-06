@@ -94,9 +94,34 @@ export default function CreateEntry() {
     setIsSubmitting(true);
     
     try {
-      // For now, use default coordinates (center of the world)
-      // In a real app, you'd geocode the location to get actual coordinates
-      const coordinates: [number, number] = [20, 0];
+      // Geocode the location to get coordinates
+      let coordinates: [number, number] = [20, 0]; // Default fallback
+      
+      try {
+        // Use OpenStreetMap Nominatim API (free, no API key required)
+        const geocodeResponse = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`,
+          {
+            headers: {
+              'User-Agent': 'Travel-Journal-App' // Required by Nominatim
+            }
+          }
+        );
+        
+        if (geocodeResponse.ok) {
+          const geocodeData = await geocodeResponse.json();
+          if (geocodeData && geocodeData.length > 0) {
+            const lat = parseFloat(geocodeData[0].lat);
+            const lon = parseFloat(geocodeData[0].lon);
+            if (!isNaN(lat) && !isNaN(lon)) {
+              coordinates = [lat, lon];
+            }
+          }
+        }
+      } catch (geocodeError) {
+        console.warn('Geocoding failed, using default coordinates:', geocodeError);
+        // Continue with default coordinates if geocoding fails
+      }
 
       // Combine cover image and gallery images
       const allImages = coverImage ? [coverImage, ...images] : images;
@@ -223,12 +248,13 @@ export default function CreateEntry() {
                           {date ? format(date, "PPP") : <span>Add Date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 border-border/50 shadow-xl" align="start">
                         <Calendar
                           mode="single"
                           selected={date}
                           onSelect={setDate}
                           initialFocus
+                          className="rounded-xl"
                         />
                       </PopoverContent>
                     </Popover>

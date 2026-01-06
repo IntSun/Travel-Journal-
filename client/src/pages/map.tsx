@@ -32,15 +32,22 @@ const mapStyle = {
   zIndex: 10
 };
 
-// Component to handle map view reset
-function ResetView({ center }: { center: [number, number] }) {
+// Component to auto-fit map bounds to show all markers
+function FitBounds({ positions }: { positions: [number, number][] }) {
   const map = useMap();
-  map.setView(center, map.getZoom());
+  
+  useEffect(() => {
+    if (positions.length > 0) {
+      const bounds = L.latLngBounds(positions);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 5 });
+    }
+  }, [positions, map]);
+  
   return null;
 }
 
 export default function MapPage() {
-  const center: [number, number] = [20, 0]; // World view
+  const center: [number, number] = [30, 30]; // Initial center - will auto-adjust to fit all markers
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -74,7 +81,16 @@ export default function MapPage() {
   }, [user, setLocation]);
 
   // Sort entries by date to create a logical path
-  const sortedEntries = [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // Filter out entries without valid coordinates
+  const entriesWithCoords = entries.filter(entry => 
+    entry.coordinates && 
+    Array.isArray(entry.coordinates) && 
+    entry.coordinates.length === 2 &&
+    !isNaN(entry.coordinates[0]) && 
+    !isNaN(entry.coordinates[1])
+  );
+  
+  const sortedEntries = [...entriesWithCoords].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const polylinePositions = sortedEntries.map(entry => entry.coordinates);
 
   return (
@@ -121,16 +137,30 @@ export default function MapPage() {
               <div className="absolute inset-0 flex items-center justify-center bg-muted/20 rounded-3xl">
                 <Loader2 className="w-12 h-12 animate-spin text-primary" />
               </div>
+            ) : sortedEntries.length === 0 ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/20 rounded-3xl p-8 text-center">
+                <MapPin className="w-16 h-16 text-muted-foreground mb-4" />
+                <h3 className="text-2xl font-serif font-bold text-foreground mb-2">
+                  No Locations Yet
+                </h3>
+                <p className="text-muted-foreground max-w-md mb-6">
+                  Start creating journal entries with locations to see them appear on your travel map!
+                </p>
+                <Link href="/create">
+                  <Button>Create Entry</Button>
+                </Link>
+              </div>
             ) : (
-            <MapContainer center={center} zoom={3} style={mapStyle} scrollWheelZoom={true} className="z-0">
-                {/* 
-                   Using CartoDB Positron for a clean, light map that fits the theme 
-                   (No API key required for standard usage)
-                */}
+            <MapContainer center={center} zoom={2} style={mapStyle} scrollWheelZoom={true} className="z-0">
+                {/* Using standard OpenStreetMap tiles for accurate geographical representation */}
                 <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    maxZoom={19}
                 />
+                
+                {/* Auto-fit bounds to show all markers */}
+                <FitBounds positions={polylinePositions} />
 
                 {/* Animated Path */}
                 <Polyline 
