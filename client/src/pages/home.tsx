@@ -246,8 +246,7 @@ export default function Home() {
                 transition={{ delay: index * 0.1, duration: 0.6, ease: "easeOut" }}
                 className={index === 0 ? "md:col-span-2 lg:col-span-2 row-span-2" : ""}
               >
-                <Link href={`/entry/${entry.id}`}>
-                  <a className="block h-full group perspective-1000">
+                <Link href={`/entry/${entry.id}`} className="block h-full group perspective-1000">
                     <Card className={`h-full overflow-hidden border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-card group-hover:-translate-y-2 group-hover:bg-white dark:group-hover:bg-zinc-900 ${index === 0 ? "flex flex-col md:flex-row" : "flex flex-col"}`}>
                       <div className={`relative overflow-hidden ${index === 0 ? "md:w-2/3 h-64 md:h-auto" : "h-72"}`}>
                         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10 duration-500" />
@@ -289,7 +288,6 @@ export default function Home() {
                         </CardFooter>
                       </div>
                     </Card>
-                  </a>
                 </Link>
               </motion.div>
             ))}

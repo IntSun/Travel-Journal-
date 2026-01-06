@@ -337,14 +337,14 @@ export default function ViewEntry() {
             <h3 className="font-serif text-2xl font-bold mb-6 pl-2 border-l-4 border-accent">More Adventures</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {relatedEntries.map((related, idx) => (
-                    <Link key={related.id} href={`/entry/${related.id}`}>
-                        <motion.a 
-                           whileInView={{ opacity: 1, y: 0 }}
-                           initial={{ opacity: 0, y: 20 }}
-                           viewport={{ once: true }}
-                           transition={{ duration: 0.5, delay: idx * 0.1 }}
-                           className="group block bg-card hover:bg-muted/30 rounded-2xl p-4 transition-colors border border-border/50 hover:border-primary/20"
-                        >
+                    <motion.div
+                        key={related.id}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: idx * 0.1 }}
+                    >
+                        <Link href={`/entry/${related.id}`} className="group block bg-card hover:bg-muted/30 rounded-2xl p-4 transition-colors border border-border/50 hover:border-primary/20">
                             <div className="flex gap-4">
                                 <div className="h-24 w-24 rounded-lg overflow-hidden flex-shrink-0">
                                     <img src={related.images[0]} alt={related.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -356,8 +356,8 @@ export default function ViewEntry() {
                                     </div>
                                 </div>
                             </div>
-                        </motion.a>
-                    </Link>
+                        </Link>
+                    </motion.div>
                 ))}
             </div>
         </div>

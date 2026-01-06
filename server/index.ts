@@ -91,12 +91,13 @@ app.use((req, res, next) => {
 
   // Use PORT environment variable if specified, otherwise use 0 to get any available port
   const requestedPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 0;
+  const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "localhost";
   httpServer.listen(
     requestedPort,
-    "localhost",
+    host,
     () => {
       const actualPort = (httpServer.address() as { port: number })?.port || requestedPort;
-      log(`serving on port ${actualPort}`);
+      log(`serving on port ${actualPort} (${host})`);
     },
   );
 })();

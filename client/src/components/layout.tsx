@@ -56,20 +56,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav className="hidden md:flex items-center gap-1 bg-black/5 dark:bg-white/5 p-1 rounded-full backdrop-blur-sm border border-white/10">
-            <Link href="/">
-              <a className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${location === '/' ? 'bg-white dark:bg-zinc-800 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                Journal
-              </a>
+            <Link href="/" className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${location === '/' ? 'bg-white dark:bg-zinc-800 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              Journal
             </Link>
-            <Link href="/map">
-              <a className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${location === '/map' ? 'bg-white dark:bg-zinc-800 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                Map
-              </a>
+            <Link href="/map" className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${location === '/map' ? 'bg-white dark:bg-zinc-800 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              Map
             </Link>
-            <Link href="/create">
-              <a className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${location === '/create' ? 'bg-white dark:bg-zinc-800 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                New Entry
-              </a>
+            <Link href="/create" className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${location === '/create' ? 'bg-white dark:bg-zinc-800 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              New Entry
             </Link>
           </nav>
 
