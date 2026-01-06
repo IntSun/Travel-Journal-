@@ -31,15 +31,23 @@ export async function registerRoutes(
   // WARNING: In production, implement proper authentication with JWT/bcrypt
   app.get("/api/users/username/:username", async (req: Request, res: Response) => {
     try {
+      console.log(`[API] Getting user by username: ${req.params.username}`);
       const user = await storage.getUserByUsername(req.params.username);
       if (!user) {
+        console.log(`[API] User not found: ${req.params.username}`);
         return res.status(404).json({ message: "User not found" });
       }
+      console.log(`[API] User found: ${req.params.username}`);
       // For now, send password for client-side verification
       // TODO: Implement proper backend authentication
       res.json(user);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error(`[API] Error getting user:`, error.message);
+      console.error(`[API] Full error:`, error);
+      res.status(500).json({ 
+        message: error.message,
+        error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
     }
   });
 

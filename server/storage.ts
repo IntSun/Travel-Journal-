@@ -31,13 +31,16 @@ export class MongoStorage implements IStorage {
 
   private async ensureConnection() {
     if (!this.connectionPromise) {
+      console.log("[Storage] Initiating MongoDB connection...");
       this.connectionPromise = connectDB().catch((error) => {
-        console.error("Failed to connect to MongoDB:", error);
+        console.error("[Storage] Failed to connect to MongoDB:", error.message);
+        console.error("[Storage] Error details:", error);
         this.connectionPromise = null; // Reset on error to allow retry
         throw error;
       });
     }
     await this.connectionPromise;
+    console.log("[Storage] MongoDB connection ready");
   }
 
   // Helper to convert Mongoose document to plain object
