@@ -55,10 +55,27 @@ async function buildAll() {
     outfile: "dist/index.cjs",
     define: {
       "process.env.NODE_ENV": '"production"',
+      "process.env.VERCEL": '"1"',
     },
     minify: true,
     external: externals,
     logLevel: "info",
+    banner: {
+      js: `
+// Vercel serverless function wrapper
+const originalModule = {};
+`.trim()
+    },
+    footer: {
+      js: `
+// Ensure proper export for Vercel
+if (typeof module !== 'undefined' && module.exports) {
+  const app = module.exports.default || module.exports;
+  module.exports = app;
+  module.exports.default = app;
+}
+`.trim()
+    }
   });
 
   console.log("Creating Vercel output structure...");
@@ -73,6 +90,34 @@ async function buildAll() {
   // Copy server function
   await cp("dist/index.cjs", ".vercel/output/functions/api.func/index.js");
 
+  // Create a wrapper to ensure proper export
+  const wrapperCode = `
+// Vercel serverless function wrapper
+const app = require('./index.js');
+
+module.exports = async (req, res) => {
+  try {
+    const handler = app.default || app;
+    if (typeof handler === 'function') {
+      return await handler(req, res);
+    } else if (handler && typeof handler.handle === 'function') {
+      return await handler.handle(req, res);
+    } else {
+      console.error('Invalid app export:', typeof handler);
+      res.status(500).json({ error: 'Server configuration error' });
+    }
+  } catch (error) {
+    console.error('Function error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+`.trim();
+
+  await writeFile(
+    ".vercel/output/functions/api.func/___vc_handler.js",
+    wrapperCode
+  );
+
   // Create package.json for the function (needed for dependencies)
   const functionPackage = {
     type: "commonjs"
@@ -86,7 +131,7 @@ async function buildAll() {
   // Create function config
   const functionConfig = {
     runtime: "nodejs20.x",
-    handler: "index.js",
+    handler: "___vc_handler.js",
     launcherType: "Nodejs",
     supportsResponseStreaming: true
   };

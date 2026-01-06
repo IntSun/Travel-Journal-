@@ -44,15 +44,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/">
-            <a className="flex items-center gap-3 group">
-              <div className={`p-2.5 rounded-xl transition-all duration-300 ${scrolled || !isEntryPage ? "bg-primary/10 text-primary" : "bg-white/20 text-white backdrop-blur-md"}`}>
-                <Compass className="h-6 w-6" />
-              </div>
-              <span className={`font-serif text-2xl font-bold tracking-wide transition-colors ${scrolled || !isEntryPage ? "text-foreground" : "text-white"}`}>
-                Wanderlust
-              </span>
-            </a>
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className={`p-2.5 rounded-xl transition-all duration-300 ${scrolled || !isEntryPage ? "bg-primary/10 text-primary" : "bg-white/20 text-white backdrop-blur-md"}`}>
+              <Compass className="h-6 w-6" />
+            </div>
+            <span className={`font-serif text-2xl font-bold tracking-wide transition-colors ${scrolled || !isEntryPage ? "text-foreground" : "text-white"}`}>
+              Wanderlust
+            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1 bg-black/5 dark:bg-white/5 p-1 rounded-full backdrop-blur-sm border border-white/10">
