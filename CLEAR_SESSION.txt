@@ -1,0 +1,2 @@
+﻿console.log('To clear user session and see guest view, run this in browser console:');
+console.log('localStorage.removeItem(\"user\"); location.reload();');
