@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { connectDB } from "./db";
 
 // Load environment variables from .env file only in development
 // In production (Vercel), environment variables are provided by the platform
@@ -82,10 +83,15 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Check database connectivity in production
   if (process.env.NODE_ENV === "production") {
+    try {
+      await connectDB();
+      console.log("✅ [PROD] Database is reachable and connected");
+    } catch (error: any) {
+      console.error("❌ [PROD] Database is NOT reachable:", error.message);
+      console.error("❌ [PROD] Database connection failed:", error);
+    }
     serveStatic(app);
   } else {
     const { setupVite } = await import("./vite");
@@ -110,5 +116,5 @@ app.use((req, res, next) => {
 
 // Export the Express app for Vercel serverless functions
 // Vercel expects either the app directly or a handler function
-module.exports = app;
-module.exports.default = app;
+export default app;
+export { app };
